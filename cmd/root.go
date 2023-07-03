@@ -99,6 +99,11 @@ func newRoot() *cobra.Command {
 	return root
 }
 
+const (
+	csvSuffix  = ".csv"
+	fareSuffix = "_费用.csv"
+)
+
 func getCSVPath(files []string) ([]string, error) {
 	var csvPath []string
 	for _, root := range files {
@@ -113,7 +118,10 @@ func getCSVPath(files []string) ([]string, error) {
 				return nil
 			}
 
-			if filepath.Ext(d.Name()) != ".csv" {
+			if filepath.Ext(d.Name()) != csvSuffix {
+				return nil
+			}
+			if strings.Contains(d.Name(), fareSuffix) {
 				return nil
 			}
 
@@ -138,15 +146,12 @@ func handleCSV(output, src string) error {
 	}
 	defer file.Close()
 
-	var (
-		dst    string
-		suffix = "_费用.csv"
-	)
+	var dst string
 	if output == "" {
-		dst = strings.TrimSuffix(src, ".csv") + suffix
+		dst = strings.TrimSuffix(src, csvSuffix) + fareSuffix
 	} else {
 		dst = filepath.Join(output,
-			strings.TrimSuffix(filepath.Base(src), ".csv")+suffix)
+			strings.TrimSuffix(filepath.Base(src), csvSuffix)+fareSuffix)
 	}
 
 	target, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
