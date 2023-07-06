@@ -91,7 +91,7 @@ func TestCalcFare2(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := calcFare(test.weight)
+			got := calcFare("", test.weight)
 			if got != test.want {
 				t.Fatalf("name: %s, want: %d, got: %d",
 					test.name, test.want, got)

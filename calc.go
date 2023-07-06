@@ -48,7 +48,7 @@ func CalcFare(dst io.Writer, src io.Reader) error {
 			return fmt.Errorf("无效的结算重量, 行: %d", line)
 		}
 
-		fare := calcFare(weight)
+		fare := calcFare(record[7], weight)
 		sumFare += fare
 		record = append(record, strconv.FormatInt(fare, 10))
 		logger.Debugf("append record, len: %d, cap: %d", len(record), cap(record))
@@ -76,19 +76,76 @@ func setFareTitle(w *csv.Writer, r *csv.Reader) error {
 	return w.Write(record)
 }
 
-const (
-	// 首重价格5rmb
-	startingFare = 5
-	// 首重1kg
-	startingWeight = 1
-	// 续重价格2rmb
-	secondFare = 2
+// 某地区运费单价
+type areaFare struct {
+	// 首重价格
+	startingFare int64
+	// 续重价格
+	secondFare int64
+}
+
+var (
+	defaultAreaFare = areaFare{
+		startingFare: 5,
+		secondFare:   2,
+	}
+	areaFareMap = map[string]areaFare{
+		"黑龙江省": {
+			startingFare: 7,
+			secondFare:   4,
+		},
+		"吉林省": {
+			startingFare: 7,
+			secondFare:   4,
+		},
+		"辽宁省": {
+			startingFare: 7,
+			secondFare:   4,
+		},
+		"内蒙古自治区": {
+			startingFare: 7,
+			secondFare:   4,
+		},
+		"甘肃省": {
+			startingFare: 7,
+			secondFare:   4,
+		},
+		"宁夏回族自治区": {
+			startingFare: 7,
+			secondFare:   4,
+		},
+		"青海省": {
+			startingFare: 7,
+			secondFare:   4,
+		},
+		"新疆维吾尔自治区": {
+			startingFare: 12,
+			secondFare:   12,
+		},
+		"海南省": {
+			startingFare: 12,
+			secondFare:   12,
+		},
+		"西藏自治区": {
+			startingFare: 12,
+			secondFare:   12,
+		},
+	}
 )
 
-func calcFare(weight float64) int64 {
+func getAreaFare(area string) areaFare {
+	af, ok := areaFareMap[area]
+	if ok {
+		return af
+	}
+	return defaultAreaFare
+}
+
+func calcFare(area string, weight float64) int64 {
 	if weight <= 0 {
 		return 0
 	}
 	weight = math.Ceil(weight)
-	return int64(startingFare + (weight-startingWeight)*secondFare)
+	af := getAreaFare(area)
+	return af.startingFare + int64(weight-1)*af.secondFare
 }
